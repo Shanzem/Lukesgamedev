@@ -7,7 +7,7 @@
 
 														
 Open in full screen not windowed														
-Open source graphics engine needed.														
+Open source graphics engine ORGE. https://www.ogre3d.org/	(Acquired, Need MinGW64 Dev-C++ Dev package - Site down to migration)													
 Add Background image
 Add Background Music
 Add save / load
