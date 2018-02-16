@@ -1,0 +1,19 @@
+
+
+
+
+														TODO
+
+
+														
+Open in full screen not windowed														
+Open source graphics engine needed.														
+Add Background image
+Add Background Music
+Add save / load
+New User Window Positions setup.
+Clean up code!
+
+ 
+
+
