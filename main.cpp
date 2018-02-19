@@ -7,6 +7,8 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <tchar.h>
+#include <d3dx9.h>
+#include <ctime>
 
 // Data
 static LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;
@@ -42,13 +44,91 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+struct ExampleAppLog    // CODE FOR LOG, MAKE ME NEATER.
+{
+    ImGuiTextBuffer     Buf;
+    ImGuiTextFilter     Filter;
+    ImVector<int>       LineOffsets;        // Index to lines offset
+    bool                ScrollToBottom;
+
+    void    Clear()     { Buf.clear(); LineOffsets.clear(); }
+
+    void    AddLog(const char* fmt, ...) IM_FMTARGS(2)
+    {
+        int old_size = Buf.size();
+        va_list args;
+        va_start(args, fmt);
+        Buf.appendfv(fmt, args);
+        va_end(args);
+        for (int new_size = Buf.size(); old_size < new_size; old_size++)
+            if (Buf[old_size] == '\n')
+                LineOffsets.push_back(old_size);
+        ScrollToBottom = true;
+    }
+
+    void    Draw(const char* title, bool* p_open = NULL)
+    {	
+
+        ImGui::Begin(title, p_open, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+        if (ImGui::Button("Clear")) Clear();
+        ImGui::SameLine();
+        bool copy = ImGui::Button("Copy");
+        ImGui::SameLine();
+        Filter.Draw("Filter", -100.0f);
+        ImGui::Separator();
+        ImGui::BeginChild("scrolling", ImVec2(0,0), true, ImGuiWindowFlags_HorizontalScrollbar);
+        if (copy) ImGui::LogToClipboard();
+
+        if (Filter.IsActive())
+        {
+            const char* buf_begin = Buf.begin();
+            const char* line = buf_begin;
+            for (int line_no = 0; line != NULL; line_no++)
+            {
+                const char* line_end = (line_no < LineOffsets.Size) ? buf_begin + LineOffsets[line_no] : NULL;
+                if (Filter.PassFilter(line, line_end))
+                    ImGui::TextUnformatted(line, line_end);
+                line = line_end && line_end[1] ? line_end + 1 : NULL;
+            }
+        }
+        else
+        {
+            ImGui::TextUnformatted(Buf.begin());
+        }
+
+        if (ScrollToBottom)
+            ImGui::SetScrollHere(1.0f);
+        ScrollToBottom = false;
+        ImGui::EndChild();
+        ImGui::End();
+    }
+};
+static void ShowExampleAppLog(bool* p_open)
+{
+    static ExampleAppLog log;
+
+    // Demo: add random items (unless Ctrl is held)
+    static float last_time = -1.0f;
+    float time = ImGui::GetTime();
+    if (time - last_time >= 0.80f && !ImGui::GetIO().KeyCtrl)
+    {
+        const char* random_words[] = { "Hits", "Attack", "Experiance gain", "Miss target", "Ouch" };
+        log.AddLog("[%s] Hello,\n", random_words[rand() % IM_ARRAYSIZE(random_words)], time, ImGui::GetFrameCount());
+        last_time = time;
+    }
+		
+    	//ImGui::SetNextWindowPos(ImVec2(5, 635));
+    	//ImGui::SetNextWindowSize(ImVec2(503,120));
+		log.Draw("Reove title bar.", p_open);
+		
+}
 
 int main(int, char**)
 {
     // Create application window
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, LoadCursor(NULL, IDC_ARROW), NULL, NULL, _T("ImGui Example"), NULL };
     RegisterClassEx(&wc);
-    HWND hwnd = CreateWindow(_T("ImGui Example"), _T("ImGui DirectX9 Example"), WS_OVERLAPPEDWINDOW, 100, 100, 1240, 800, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindow(_T("ImGui Example"), _T("ImGui DirectX9 Example"), WS_OVERLAPPEDWINDOW, 0, 0, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
     // Initialize Direct3D
     LPDIRECT3D9 pD3D;
@@ -104,9 +184,13 @@ int main(int, char**)
     bool ShowExampleMenuFile = false;
     bool ShowCharacterScreen = false;
     bool show_app = true;
-	
+    bool test_window = false;
+    bool show_ui = true;
+    bool char_port = false;
+    bool exit = false;
+	static bool show_app_log = false;
     
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.00f, 0.00f, 0.00f, 1.00f); // colour for screen. place holder picture me asap.
 	
     // Main loop
     MSG msg;
@@ -138,7 +222,11 @@ int main(int, char**)
             ImGui::Separator();
             ImGui::MenuItem("Load", "CTRL+L");
             ImGui::MenuItem("Options", "CTRL+O");
-            ImGui::MenuItem("Exit", "CTRL+E");
+            ImGui::MenuItem("Exit", "CTRL+E", &exit);
+            if (exit)
+            {
+            	goto Shutdown;	
+			}
             ImGui::EndMenu();
         }
         
@@ -148,26 +236,22 @@ int main(int, char**)
         
 		if (show_app)
 				{
-			ImGui::Begin("Window Debugger.", &show_app);
+			ImGui::SetNextWindowPos(ImVec2(435, 131));    
+			ImGui::SetNextWindowSize(ImVec2(400,300)); 
+			ImGui::Begin("Window manager.", &show_app);
             ImGui::Text("");
-            ImGui::Text("Choose an option below to proceed.");
-            ImGui::Checkbox("Debug me", &ShowCharacterScreen);      // Edit bools storing our windows open/close state
-            ImGui::Checkbox("show me", &ShowLogOutput);
-
+            ImGui::Text("Window skipper..");
+            ImGui::Checkbox("Character sheet", &ShowCharacterScreen);      // Edit bools storing our windows open/close state
+            ImGui::Checkbox("Show example dice roll log", &show_app_log);
+            ImGui::Checkbox("Show UI", &show_ui);
+				if (show_app_log)                 ShowExampleAppLog(&show_app_log);
             if (ImGui::Button("Close Me"))
                 show_another_window = false;
             ImGui::End();
 				}
 				
 
-		//if (ShowLogOutput)
-		//{
-		//	static ExampleAppLog my_log;
-		//	my_log.AddLog("Hello %d world\n", 123);
-		//	my_log.Draw("title");
-		//	
-		//
-		//}
+		
         // 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
         if (show_demo_window)
         {
@@ -175,6 +259,65 @@ int main(int, char**)
             ImGui::ShowDemoWindow(&show_demo_window);
         }
         
+		if (show_ui)
+				 {
+				if (show_ui)
+				 	
+					{
+				ImGui::SetNextWindowPos(ImVec2(977, 20));    
+				ImGui::SetNextWindowSize(ImVec2(400,178)); 
+				ImGui::Begin("MINIMAP.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            	ImGui::Text("Minimap");
+            	ImGui::Text("clickable.");
+				ImGui::End();
+					
+					}
+        	ImGui::SetNextWindowPos(ImVec2(977, 200));    
+			ImGui::SetNextWindowSize(ImVec2(400,600));
+			ImGui::Begin("map and other ui elements.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            ImGui::Text("");
+            ImGui::Text("Place holder for clickable elements.");
+            ImGui::Text("Inventory, other stuff.");
+            ImGui::Text("");
+        		if (show_ui)
+            	{
+            	ImGui::SetNextWindowPos(ImVec2(0, 20));    
+				ImGui::SetNextWindowSize(ImVec2(100,100)); 
+				ImGui::Begin("Picture.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            	ImGui::Text("Add Picture");
+            	ImGui::Text("clickable.");
+				ImGui::End();
+				}
+				if (show_ui)
+       			 {
+        	ImGui::SetNextWindowPos(ImVec2(360, 20));    
+			ImGui::SetNextWindowSize(ImVec2(500,100)); 
+			ImGui::Begin("Place holder for status effects", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            ImGui::Text("");
+            ImGui::Text("Place holder for status effects.");
+            ImGui::End();
+				}
+				if (show_ui)
+       			 {
+        	ImGui::SetNextWindowPos(ImVec2(5, 640));    
+			ImGui::SetNextWindowSize(ImVec2(350,120)); 
+			ImGui::Begin("Place holder for log window.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            ImGui::Text("");
+            ImGui::Text("Place holder for dice log window");
+            ImGui::End();
+				}
+				if (show_ui)
+       			 {
+        	ImGui::SetNextWindowPos(ImVec2(357, 640));    
+			ImGui::SetNextWindowSize(ImVec2(618,120)); 
+			ImGui::Begin("Place holder for skills.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            ImGui::Text("");
+            ImGui::Text("Skill and Explorer items here..");
+            ImGui::End();
+				}
+            ImGui::End();
+				}
+					
         if (ShowCharacterScreen)
 		{
 			ImGui::SetNextWindowPos(ImVec2(315, 20), ImGuiCond_FirstUseEver);
@@ -196,6 +339,14 @@ int main(int, char**)
             ImGui::RadioButton("Male", &Sex, 0);ImGui::SameLine(160);ImGui::RadioButton("None", &abnormalities, 0);ImGui::SameLine(280);ImGui::RadioButton("Deviant Tastes", &abnormalities, 2);ImGui::SameLine(430);ImGui::RadioButton("Egomania", &abnormalities, 4);
             ImGui::RadioButton("Female", &Sex, 1);ImGui::SameLine(160);ImGui::RadioButton("Nocturnal", &abnormalities, 1);ImGui::SameLine(280);ImGui::RadioButton("Lygophobia", &abnormalities, 3);ImGui::SameLine(430);ImGui::RadioButton("Necromania", &abnormalities, 5);
             ImGui::Text("");
+            ImGui::Text("Abnormalities have a give and take effect to the stats of a charecter. Adds new elements of game play.");
+			ImGui::Text("Example, 'Nocturnal', And 'Necromancy' school of thought will produce a Necromancer with Vampirism. ");
+			ImGui::Text("This will have an impact on the characters insanity resistence and behavior.");
+			ImGui::Text("");
+			ImGui::Text("New players its suggested you choose 'None'.");
+			ImGui::Text("");
+			ImGui::Text("Current effect:");
+			ImGui::Text("");
 			ImGui::Separator();
             ImGui::Text("");
             ImGui::Text("School of thought:");
@@ -219,11 +370,22 @@ int main(int, char**)
             ImGui::Text("");
             ImGui::Text("Who do you choose?");
             ImGui::Text("");
-            ImGui::RadioButton("Sadistic   AI", &Difficulty, 0);ImGui::SameLine(200);ImGui::Text("- Punishment and cruelty.");
-            ImGui::RadioButton("Nihilistic AI", &Difficulty, 1);ImGui::SameLine(200);ImGui::Text("- Why even bother?.");
+            ImGui::RadioButton("Sadistic   AI", &Difficulty, 1);ImGui::SameLine(200);ImGui::Text("- Punishment and cruelty.");ImGui::SameLine(400);ImGui::Text("- Hard");
+            ImGui::RadioButton("Nihilistic AI", &Difficulty, 0);ImGui::SameLine(200);ImGui::Text("- Why even bother?");ImGui::SameLine(400);ImGui::Text("- Easy");
             ImGui::Text("");
             ImGui::Separator();
+            int Essence;
+            if (Essence > 30){ Essence = 0;}
+            int Dexterity;
+            if (Dexterity > 30){ Dexterity = 0;}
+            int Health;
+            if (Health > 30){ Health = 0;}
+            int Fatigue;
+            if (Fatigue > 30){ Fatigue = 0;}
+            int Insanity_res;
+            if (Insanity_res > 30){ Insanity_res = 0;}
 			static int skill_points = 15;
+			int skill_points_spent = 0;
             static int skill_blah = 0;
             static int skill_blah_q = 0;
             static int skill_blah_w = 0;
@@ -233,13 +395,36 @@ int main(int, char**)
             static int skill_blah_y = 0;
             static int skill_blah_u = 0;
             static int skill_blah_i = 0;
-            ImGui::Text(" ");
+            ImGui::Text("");
+            ImGui::Text("You need to roll stats, (15) + 7 !");
+            ImGui::Text("");
+            if (ImGui::Button("Reroll Stats"))
+                {
+                	srand(static_cast<unsigned int>(time(0)));
+					int randomNumber = rand();
+			
+                	Essence = 0;
+                	Dexterity = 0;
+                	Health = 0;
+                	Fatigue = 0;
+                	Insanity_res = 0;
+                	Essence = (randomNumber % 15) + 7;
+            		Dexterity = (randomNumber % 10) + 5;
+            		Health = (randomNumber % 15) + 6;
+            		Fatigue = (randomNumber % 15) + 8;
+            
+				}
+			ImGui::Text(" ");
             ImGui::Text("Energy, Mana. ");ImGui::SameLine(120);ImGui::Text("Dodge");ImGui::SameLine(220);ImGui::Text("The Curse of youth.");ImGui::SameLine(400);ImGui::Text("Run rabbit run.");ImGui::SameLine(550);ImGui::Text("Bewarned it will happen!");
-            ImGui::Text("Essence: ");ImGui::SameLine(120);ImGui::Text("Dexterity: ");ImGui::SameLine(220);ImGui::Text("Health: ");ImGui::SameLine(400);ImGui::Text("Fatigue: ");ImGui::SameLine(550);ImGui::Text("Insanity: ");
+            ImGui::Text("Essence: %d", Essence);ImGui::SameLine(120);ImGui::Text("Dexterity: %d", Dexterity);ImGui::SameLine(220);ImGui::Text("Health: %d", Health);ImGui::SameLine(400);ImGui::Text("Fatigue: %d", Fatigue);ImGui::SameLine(550);ImGui::Text("Insanity Resistence: %d%%", Insanity_res);
             ImGui::Text(" ");
 			ImGui::Text("'Grey hair' Points to spend: %d", skill_points);ImGui::SameLine(300);ImGui::Text("- Grey hairs are the skills currency, the more the better!");
-            ImGui::Text(" ");
+            skill_points_spent = skill_blah + skill_blah_q + skill_blah_w + skill_blah_e + skill_blah_r + skill_blah_t + skill_blah_y + skill_blah_u + skill_blah_i;
+			ImGui::Text("'Grey hair' Points used : %d", skill_points_spent);
+            ImGui::Text("");
 			ImGui::Separator();
+			ImGui::Text("");
+			ImGui::Text("'Grey hair' Skill list");
 			ImGui::Text("");
             ImGui::PushItemWidth(100);
             ImGui::Text("Scholarly pursuits    - Skill needed for old writings.");ImGui::SameLine(400);ImGui::SliderInt("+ Reading/Writing", &skill_blah, 0, 3);
@@ -252,7 +437,9 @@ int main(int, char**)
             ImGui::Text("Learning              - A candle and a good book.");ImGui::SameLine(400);ImGui::SliderInt("+ Bonues grey hairs", &skill_blah_u, 0, 3);
             ImGui::Text("Archaeology           - Tomb or something sinister?");ImGui::SameLine(400);ImGui::SliderInt("+ Find secrects", &skill_blah_i, 0, 3);
             ImGui::Text("");
-            ImGui::Separator();
+            ImGui::Text("Each level gain will produce a number grey hairs and points to spend in the school of thought skills tree.");
+            ImGui::Text("");
+			ImGui::Separator();
             ImGui::Text("");
             ImGui::Text("");ImGui::SameLine(300);
             if (ImGui::Button("Cancel"))
@@ -273,7 +460,7 @@ int main(int, char**)
 			ImGui::End();
 		}
         
-
+		
         // Rendering
         ImGui::EndFrame();
         g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, false);
@@ -296,7 +483,7 @@ int main(int, char**)
             ImGui_ImplDX9_CreateDeviceObjects();
         }
     }
-
+	Shutdown:
     ImGui_ImplDX9_Shutdown();
     if (g_pd3dDevice) g_pd3dDevice->Release();
     if (pD3D) pD3D->Release();
