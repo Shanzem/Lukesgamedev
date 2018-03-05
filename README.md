@@ -11,7 +11,7 @@ IMGUI API Merged.
 
 All using the Direct X 9 implementation 
 
-Back up with notes on basic newbie features, like adding pictures graphics etc.
+Backed up with notes on basic newbie features, like adding pictures graphics etc.
 
 All the newbies have to do is download the latest bloodshed Dev ++ as of writing this 4.9.9.2
 
