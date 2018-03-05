@@ -84,6 +84,12 @@ struct ExampleAppConsole2					// LOG STARTS HERE, ISSUES :(
     	AddLog("Check source.");
     	AddLog("Playing with pictures");
     	AddLog("Check about source.");
+    	AddLog("For basic UI have -");
+    	AddLog("Low level pictures.");
+    	AddLog("Grab W3 Icons. ");
+    	AddLog("Need em loads");
+    	AddLog("SEE NOTES ON ADDING PICS");
+    	
 	}
         
 
@@ -132,9 +138,10 @@ struct ExampleAppConsole2					// LOG STARTS HERE, ISSUES :(
             return;
         }
 
-        if (ImGui::SmallButton("Clear")) { ClearLog(); } ImGui::SameLine(); /////    MAKE ME SMALLER ////// SPACEING FROM BOTTOM
-        bool copy_to_clipboard = ImGui::SmallButton("Copy"); ImGui::SameLine();
-        if (ImGui::SmallButton("Scroll to bottom")) ScrollToBottom = true;
+        if (ImGui::Button("Clear")) { ClearLog(); } ImGui::SameLine(); 
+        bool copy_to_clipboard = ImGui::Button("Copy"); ImGui::SameLine();
+        if (ImGui::Button("Scroll to bottom")) ScrollToBottom = true;
+        ImGui::Separator();
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
         if (ImGui::BeginPopupContextWindow())
         {
@@ -185,6 +192,9 @@ struct ExampleAppConsole2					// LOG STARTS HERE, ISSUES :(
     
     
 };													// LOG ENDS HERE
+static LPDIRECT3DTEXTURE9       avatar = NULL;		// image idents here. here =)
+static LPDIRECT3DTEXTURE9       d20 = NULL;
+
 
 static void ShowExampleAppConsole2(bool* p_open)	// DRAW LOG
 {
@@ -213,6 +223,7 @@ int main(int, char**)
     g_d3dpp.EnableAutoDepthStencil = TRUE;
     g_d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
     g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // Present with vsync
+
     //g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // Present without vsync, maximum unthrottled framerate
 
     // Create the D3DDevice
@@ -245,7 +256,7 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
-	bool load_sheet_window = false;
+    bool load_sheet_window = false;
     bool show_demo_window = false;
     bool about = false;
     bool show_another_window = false;
@@ -253,17 +264,26 @@ int main(int, char**)
     bool show_app_main_menu_bar = true;
     bool ShowExampleMenuFile = false;
     bool ShowCharacterScreen = false;
-    bool show_app = true;
-    bool show_char_port = true;
+    bool show_app = false;
+    bool show_char_port = true; /// inside char create screen leave on...
     bool test_window = false;
-    bool show_ui = true;
+    bool show_ui = false;
     bool char_port = false;
     bool exit = false;
     bool load_image_about = false;
-	static bool show_app_console2=true;
+	static bool show_app_console2 = false;
+	bool hermetic_cookbook = false;
 	
-    
+	bool game_start_options = true;
+	bool import_image_from_file = false;
+ 
+	
+	
+	
     ImVec4 clear_color = ImVec4(0.073f, 0.115f, 0.177f, 1.000f); //RGBA colour for screen. place holder picture me asap. i still need music.
+	D3DXCreateTextureFromFile( g_pd3dDevice, "d20.png" , &d20 );			// image file grabs here :)
+	D3DXCreateTextureFromFile( g_pd3dDevice, "smile.png" , &avatar );	 
+	
 	
     // Main loop
     MSG msg;
@@ -283,9 +303,29 @@ int main(int, char**)
             continue;
         }									   ///////////////////////////////////////////
         ImGui_ImplDX9_NewFrame();             // IT ALL STARTS HERE
-											 //
-											//		
-										   /////////////////////////////////////////////
+		
+		
+		
+		
+		if (game_start_options)
+				ImGui::OpenPopup("Choose from below");
+            if (ImGui::BeginPopupModal("Choose from below", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+            {
+				if (ImGui::Button("NEW GAME",  ImVec2(120,0))) { ImGui::CloseCurrentPopup(); game_start_options = false; ShowCharacterScreen = true;}
+                if (ImGui::Button("DEV MODE", ImVec2(120,0))) { ImGui::CloseCurrentPopup(); game_start_options = false; show_app = true; show_ui = true;
+				show_app_main_menu_bar = true; show_app_console2 = true;}
+               
+                if (ImGui::Button("EXIT", ImVec2(120,0))) { ImGui::CloseCurrentPopup(); game_start_options = false; goto Shutdown; }
+                ImGui::EndPopup();
+            }
+			
+		
+		
+		
+		
+		
+		
+												
         if (show_app_main_menu_bar)
         {
         	ImGui::BeginMainMenuBar();
@@ -308,6 +348,9 @@ int main(int, char**)
 		if (ImGui::BeginMenu("Help"))
 				{
 					ImGui::MenuItem("About", "CTRL+A", &about);
+					ImGui::MenuItem("Import image", "CTRL+b", &import_image_from_file);
+					ImGui::MenuItem("About import image", "CTRL+c", &load_image_about);
+					
 					ImGui::EndMenu();
 				}
             
@@ -326,7 +369,7 @@ int main(int, char**)
 			ImGui::Text("By Luke Hays");
             ImGui::Text("");
 			ImGui::Text("Written in C++, using Dev ++ with the TDM Mingw64 compiler.");
-            ImGui::Text("Useing IMGUI API, and ORGE 3D graphics engine.");
+            ImGui::Text("Useing IMGUI API, and OGRE 3D graphics engine.");
             ImGui::Text("");
             ImGui::Text("Easter eggs to add:");
             ImGui::Text("get system time and at 00:00");
@@ -336,24 +379,15 @@ int main(int, char**)
             //ImGui::Image();
             //ImGui::ImageButton(), 
 			//ImDrawList::AddImage()
-			//ImGui::GetWindowDrawList()->AddImage()
-			
-			// HRESULT  D3DXCreateTextureFromFile(
-			//__in   LPDIRECT3DDEVICE9 pDevice,
- 			//__in   LPCTSTR pSrcFile,
- 			//__out  LPDIRECT3DTEXTURE9 *ppTexture
-			//	);
-
+			//ExampleAppConsole2::AddLog("hello"); // still having issues, google me.
             ImGui::End();
-            
-            
-            
-            
-		}
-        // 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
+        }
+        
+        
         
 		if (show_app)
 				{
+			
 			ImGui::SetNextWindowPos(ImVec2(435, 131));    
 			ImGui::SetNextWindowSize(ImVec2(400,300)); 
 			ImGui::Begin("Window manager.", &show_app);
@@ -362,14 +396,235 @@ int main(int, char**)
             ImGui::Text("");
             ImGui::Checkbox("Character sheet", &ShowCharacterScreen);      // Edit bools storing our windows open/close state
             ImGui::Checkbox("Load character sheet", &load_sheet_window);
-            ImGui::Checkbox("Show UI", &show_ui);
+            ImGui::Checkbox("Alchemy set", &hermetic_cookbook);
+			ImGui::Checkbox("Show UI", &show_ui);
+            ImGui::Text("");
+            
             ImGui::Text("");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::ShowMetricsWindow();
+        	
+			
+         							
+			//ImGui::ShowMetricsWindow();
 			ImGui::End();
 				}
+
+				if (hermetic_cookbook)    // no doubt i am going to have to put this in the main game loop.
+				{
+				ImGui::SetNextWindowPos(ImVec2(0, 131));    
+				ImGui::SetNextWindowSize(ImVec2(250,400)); 
+				ImGui::Begin("Cookbook Menu", &hermetic_cookbook, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            	ImGui::Text("Mouse over for details");
+				ImGui::Separator();
+				ImGui::Text("");
+				if (ImGui::TreeNode("The Hermetic cook book"))
+            	{
+            		static int i = 1;
+                    if (ImGui::TreeNode((void*)(intptr_t)i, "Chemical Details", i))
+                    {
+                    	
+                    	ImGui::Text("> The colors"); 
+						if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Red");ImGui::SameLine(60);ImGui::Text("= Damage");
+						ImGui::Text("Yellow");ImGui::SameLine(60);ImGui::Text("= Duration");
+						ImGui::Text("Green");ImGui::SameLine(60);ImGui::Text("= Damage Per Second");
+						ImGui::Text("Blue");ImGui::SameLine(60);ImGui::Text("= Area of Effect");
+						ImGui::Text("Pink");ImGui::SameLine(60);ImGui::Text("= Infectiousness");
+						ImGui::Text("");
+						ImGui::Text("Experiment to discover special recipes. ");
+						ImGui::Text("");
+						ImGui::Text("Special recipes have better effects");
+						ImGui::Text("and bigger bonuses.");
+						ImGui::EndTooltip(); 
+						}
+                        ImGui::TreePop();
+                    }
+               		static int j = 6; 
+                    if (ImGui::TreeNode((void*)(intptr_t)j, "Recipes", j))
+                    {
+                        ImGui::TextDisabled("> Recipe 1 (?)");
+                        if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Discover me - Discovery tip 1");
+						ImGui::EndTooltip(); 
+						}
+                        ImGui::TextDisabled("> Recipe 2 (?)");
+                        if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Discover me - Discovery tip 2");
+						ImGui::EndTooltip(); 
+						}
+                        ImGui::TextDisabled("> Recipe 3 (?)");
+                        if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Discover me - Discovery tip 3");
+						ImGui::EndTooltip(); 
+						}
+						ImGui::TextDisabled("> Recipe 4 (?)");
+                        if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Discover me - Discovery tip 4");
+						ImGui::EndTooltip(); 
+						}
+						ImGui::TextDisabled("> Recipe 5 (?)");
+                        if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Discover me - Discovery tip 5");
+						ImGui::EndTooltip(); 
+						}
+						ImGui::TextDisabled("> Recipe 6 (?)");
+						if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Discover me - Discovery tip 6");
+						ImGui::EndTooltip(); 
+						}
+						ImGui::TreePop();
+                    	}
+                    	static int k = 3;
+                    	if (ImGui::TreeNode((void*)(intptr_t)k, "Crafting Traps & Devices", k))
+                    	{
+                        ImGui::Text("> Spike trap");
+						if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Required items");
+						ImGui::Text(" ");
+						ImGui::Text("1x");ImGui::SameLine(50);ImGui::Text("Box of nails");
+						ImGui::Text("1x");ImGui::SameLine(50);ImGui::Text("Board");
+						ImGui::Text("1x");ImGui::SameLine(50);ImGui::Text("Big spring");
+						ImGui::Text("4x");ImGui::SameLine(50);ImGui::Text("string");
+						ImGui::Text("");
+						ImGui::Text("Can be placed on the ground.");
+						ImGui::Text("Trigged when stepped on.");
+						ImGui::EndTooltip(); 
+						}
+						ImGui::TextDisabled("> Trap ## (?)");
+						if (ImGui::IsItemHovered())
+            			{
+                		ImGui::SetNextWindowPos(ImVec2(255, 131));    
+						ImGui::SetNextWindowSize(ImVec2(300,300));
+						ImGui::BeginTooltip();
+						ImGui::Text("Discover me - Discovery tip 7");
+						ImGui::EndTooltip(); 
+						}
+						ImGui::TreePop();
+                    }
+                ImGui::TreePop();
+            	}
+            	ImGui::End();
+            	}
+			if (hermetic_cookbook)
+					{
+							
+			ImGui::SetNextWindowPos(ImVec2(740, 131));    
+			ImGui::SetNextWindowSize(ImVec2(500,400)); 
+			ImGui::Begin("Alchemy", &hermetic_cookbook, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            ImGui::Text("");
+            ImGui::Text("Toy idea for the Hermetic class. WIP BUGGY");
+            ImGui::Text("");
+            ImGui::Text("Using different color chemicals to produce a concoction,");
+            ImGui::Text("to throw at an opponent or object. ");
+            ImGui::Text("");
+            ImGui::Text("Move the sliders to determine how much of a chemical you put in.");
+            ImGui::Text("Cook book and details to left.");
+            ImGui::End();
+            		}
+            if(hermetic_cookbook)
+			{
+			ImGui::SetNextWindowPos(ImVec2(500, 131));    
+			//ImGui::SetNextWindowSize(ImVec2(500,400)); 
+			ImGui::Begin("Alchemy kit", &hermetic_cookbook, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            ImGui::Text("");
+            static int damage;
+            static int damage_i;
+            ImGui::PushID(damage);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(7.0f, 0.5f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(7.0f, 0.6f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(7.0f, 0.7f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(7.0f, 0.9f, 0.9f));
+            ImGui::VSliderInt("##damage", ImVec2(18,160), &damage_i, 0, 100," ");
+            ImGui::PopStyleColor(4);
+            ImGui::PopID();
+            static int duration;
+            static int duration_i;
+            ImGui::PushID(duration);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.161f, 0.852f, 0.781f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.161f, 0.900f, 0.781f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.161f, 0.900f, 0.781f));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(0.161f, 0.900f, 0.981f));
+            ImGui::SameLine();ImGui::VSliderInt("##duration", ImVec2(18,160), &duration_i, 0, 100, " ");
+            ImGui::PopStyleColor(4);
+            ImGui::PopID();
+			static int dps;
+            static int dps_i;
+            ImGui::PushID(dps);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.277f, 0.926f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.277f, 0.970f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.277f, 0.970f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(0.277f, 0.970f, 0.981f));
+            ImGui::SameLine();ImGui::VSliderInt("##dps", ImVec2(18,160), &dps_i, 0, 100, " ");
+            ImGui::PopStyleColor(4);
+            ImGui::PopID();
+			static int aoe;
+            static int aoe_i;
+            ImGui::PushID(aoe);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.645f, 0.926f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.645f, 0.970f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.645f, 0.970f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(0.645f, 0.970f, 0.981f));
+            ImGui::SameLine();ImGui::VSliderInt("##aoe", ImVec2(18,160), &aoe_i, 0, 100, " ");
+            ImGui::PopStyleColor(4);
+            ImGui::PopID();
+			static int sticky;
+            static int sticky_i;
+            ImGui::PushID(sticky);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.848f, 0.926f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.848f, 0.970f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.848f, 0.970f, 0.829f));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(0.848f, 0.970f, 0.981f));
+            ImGui::SameLine();ImGui::VSliderInt("##sticky", ImVec2(18,160), &sticky_i, 0, 100, " ");
+            ImGui::PopStyleColor(4);
+            ImGui::PopID();
+            
+            static int beaker_total = 0;
+            beaker_total = damage_i + duration_i + dps_i + aoe_i + sticky_i;
+            ImGui::Text("");
+            if (beaker_total >= 100){beaker_total = 100;}
+			ImGui::Text("");
+			ImGui::Text("Capacity %d%%", beaker_total);
+			ImGui::Text("");
+			ImGui::Text("");ImGui::SameLine(40);ImGui::Button("Concoct");
+			
+			
+			
+			ImGui::End();
+			
+				}
 		
-						
 		if (load_sheet_window)					// quick and easy to follow & fix, need a look up table, for class,  
 												
 			{									
@@ -407,7 +662,6 @@ int main(int, char**)
 			ImGui::Text("");
 			ImGui::Text("Create a character and then type the characters first name and include any capitals ");
             ImGui::Text("or load example 'Lisa'. This is a work in progress.");
-            ImGui::Text("Currently working on a look up table for school of thought. ");
             ImGui::Text(" ");
             ImGui::PushItemWidth(200);
             static char load_file[40] = "Type filename here...";    // setup text filtering, could be in latest update.
@@ -421,8 +675,8 @@ int main(int, char**)
             			if (file.is_open())
             				{						// Setup directories. '%DIR%\Saves\Charactername\'
 							load_check = 2;			// Reminder write an actual header and cpp file save/load feature HAHAHAHA!
-            				streampos size;			//regex "clean words" only produces numbers,
-					  		char * memblock;		//regex "clean numbers" only produces words.
+            				streampos size;			// regex "clean words" only produces numbers,
+					  		char * memblock;		// regex "clean numbers" only produces words.
 							size = file.tellg();
 							memblock = new char [size];
 							file.seekg (0, ios::beg);
@@ -477,7 +731,41 @@ int main(int, char**)
 			ImGui::Text("Health:  %d", Health_load);ImGui::SameLine(120);ImGui::Text("Fatigue:   %d", Fatigue_load);
 			ImGui::Text("Insanity Resistence: %d%%", Insanity_res_load);
 			ImGui::Text("");
+			switch (Class_s_load)
+			{
+			
+				case 0:	{ImGui::Text("School of thought:	Hermetic Philosophy");break;}
+				case 1:	{ImGui::Text("School of thought:	Necromancy");break;}
+				case 2:	{ImGui::Text("School of thought:	Elementalism");break;}
+				case 3:	{ImGui::Text("School of thought:	Illusion");break;}
+				case 4:	{ImGui::Text("School of thought:	Lycanthropy");break;}
+				
+			}
+			switch (abnormalities_load)
+			{
+				case 0:{ImGui::SameLine();ImGui::Text("			Abnormality:	None");break;}
+				case 1:{ImGui::SameLine();ImGui::Text("			Abnormality:	Nocturnal");break;}
+				case 2:{ImGui::SameLine();ImGui::Text("			Abnormality:	Deviant Tastes");break;}
+				case 3:{ImGui::SameLine();ImGui::Text("			Abnormality:	Lygophobia");break;}
+				case 4:{ImGui::SameLine();ImGui::Text("			Abnormality:	Egomania");break;}
+				case 5:{ImGui::SameLine();ImGui::Text("			Abnormality:	Necromania");break;}
+			}
+			ImGui::Text("");
+			switch (Special_flag_load)
+			{
+				case 0:{ImGui::Text("Current effects:				");break;}
+				case 1:{ImGui::Text("Current effects:	Vampirism");break;}
+				case 2:{ImGui::Text("Current effects:	Possessed");break;}
+				case 3:{ImGui::Text("Current effects:	Warewolf");break;}
+				case 4:{ImGui::Text("Current effects:	Pyromaniac");break;}
+				case 5:{ImGui::Text("Current effects:	Chemical Addiction");break;}
+				case 6:{ImGui::Text("Current effects:	Stalker");break;}
+				case 7:{ImGui::Text("Current effects:	Void Walker");break;}
+			}
+			ImGui::Text("");
 			ImGui::Separator();
+			ImGui::Text("");
+			ImGui::Text("Skill points spent: %d",skill_points_spent_load);
 			ImGui::Text("");
 			ImGui::Text("Skills");
 			ImGui::Text("");
@@ -496,6 +784,44 @@ int main(int, char**)
 				
 			}
 		
+		
+			if (import_image_from_file)
+				ImGui::OpenPopup("Import image:");
+            if (ImGui::BeginPopupModal("Import image:", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+				static char picture_name[40] = "mynameforfile.jpg";
+				ImGui::PushItemWidth(248);
+				ImGui::InputText("#####dummy ", picture_name, IM_ARRAYSIZE(picture_name), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_AutoSelectAll);
+            	ImGui::PopItemWidth();
+				if (ImGui::Button("LOAD",  ImVec2(120,0))) { ImGui::CloseCurrentPopup(); import_image_from_file = false; }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", ImVec2(120,0))) { ImGui::CloseCurrentPopup(); import_image_from_file = false; }
+                ImGui::EndPopup();
+            }
+			
+			if (load_image_about)
+				{
+				ImGui::SetNextWindowPos(ImVec2(400, 200));
+				ImGui::SetNextWindowSize(ImVec2(300,310));
+				ImGui::Begin("Import an image from file:", &load_image_about);
+            	ImGui::Text("");
+            	ImGui::Text("1, Images must be 100x100 pixel");
+            	ImGui::Text("   RGB 16 BIT, .JPEG");
+				ImGui::Text("   Lower case names.");
+				ImGui::Text("");
+				ImGui::Text("2, Place the .jpeg into the");
+				ImGui::Text("   Portraits folder.");
+            	ImGui::Text("");
+            	ImGui::Text("3, Image name must not contain:");
+            	ImGui::Text("   Numbers in file name.");
+				ImGui::Text("   Specail charecters.");
+				ImGui::Text("   or spaces.");
+				ImGui::Text("");
+				ImGui::Text("   e.g 'mynameforfile.jpg'");
+				ImGui::Text("");
+				ImGui::Text("   Will import correctly.");
+				ImGui::End();
+				}
         // 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
         if (show_demo_window)
         {
@@ -524,8 +850,8 @@ int main(int, char**)
 			ImGui::SetNextWindowSize(ImVec2(285,560));
 			ImGui::Begin("map and other ui elements.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
             ImGui::Text("");
-            ImGui::Text("Place holder for clickable elements.");
-            ImGui::Text("Inventory, other stuff.");
+            ImGui::Text("Charactar loadout.");
+            ImGui::Text("on hand, worn, books.");
             ImGui::Text("");
             ImGui::End();
             		}
@@ -534,12 +860,11 @@ int main(int, char**)
             ImGui::SetNextWindowPos(ImVec2(0, 20));    
 			ImGui::SetNextWindowSize(ImVec2(105,105)); 
 			ImGui::Begin("Picture.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-            ImGui::Text("Add Picture");
-            ImGui::Text("clickable.");
+            ImGui::Image((void *)avatar, ImVec2(85, 85), ImVec2(0,0),ImVec2(1,1),ImVec4(255,255,255,255),ImVec4(0,0,0,0));
 			ImGui::End();
 				}
 				{
-            ImGui::SetNextWindowPos(ImVec2(0, 125));    
+            ImGui::SetNextWindowPos(ImVec2(0, 125));
 			ImGui::SetNextWindowSize(ImVec2(105,50)); 
 			ImGui::Begin("health/mana.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 			ImGui::Text("Health:");
@@ -559,36 +884,45 @@ int main(int, char**)
        			{
         	ImGui::SetNextWindowPos(ImVec2(357, 640));    
 			ImGui::SetNextWindowSize(ImVec2(618,120)); 
-			ImGui::Begin("Place holder for skills.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-            ImGui::Text("");
-            ImGui::Text("Skill and Explorer items here..");
+			ImGui::Begin("skills,explore and combat.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+            static int Tools = 0;
+    		ImGui::PushItemWidth(100);ImGui::Combo("####dummy",&Tools,"Explore\0Spells\0Inventory\0", 3);ImGui::PopItemWidth(); // switch and case use for class specific icons.  
+			ImGui::Separator();
+			if(Tools == 0)
+			{
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));  
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::Text("Going to add a switch and case for each class / Special flag to acquire required icons.");
+			}
+			if(Tools == 1){ImGui::Text("Spells/combat");}
+			if(Tools == 2){ImGui::Text("Inventory");}
+			
+			
             ImGui::End();
 				}
 				}
 					
         if (ShowCharacterScreen)
-		{
-			ImGui::SetNextWindowSize(ImVec2(750,700));
-			ImGui::SetNextWindowPos(ImVec2(280, 20));
-			ImGui::Begin("Roll me up!", &ShowCharacterScreen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		{		ImGui::OpenPopup("dummymechar");
+            if (ImGui::BeginPopupModal("dummymechar", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+           
+			//ImGui::SetNextWindowSize(ImVec2(750,700));
+			//ImGui::SetNextWindowPos(ImVec2(280, 20));
+			//ImGui::Begin("Roll me up!", &ShowCharacterScreen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 			ImGui::Text("");
 			ImGui::SameLine(305);
 			if (show_char_port)
             {
 			
             ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-            ImGui::BeginChild("Picture", ImVec2(105,105), true, (ImGuiWindowFlags_MenuBar));
-                if (ImGui::BeginMenuBar())
-                {
-                    if (ImGui::BeginMenu("Menu"))
-                    {
-                        ImGui::MenuItem("Import Image", "CTRL+T");
-                        ImGui::MenuItem("Info", "CTRL+O", &load_image_about);
-                        ImGui::EndMenu();
-                    }
-                    ImGui::EndMenuBar();
-                }
-            
+            ImGui::BeginChild("Picture", ImVec2(105,105), true);
             ImGui::EndChild();
             ImGui::PopStyleVar();
             }
@@ -599,29 +933,7 @@ int main(int, char**)
 			ImGui::SameLine(381);
 			if (ImGui::Button("-->")){
 			}
-			if (load_image_about)
-				{
-				ImGui::SetNextWindowPos(ImVec2(400, 200));
-				ImGui::SetNextWindowSize(ImVec2(300,310));
-				ImGui::Begin("Import an image from file:", &load_image_about);
-            	ImGui::Text("");
-            	ImGui::Text("1, Images must be 100x100 pixel");
-            	ImGui::Text("   RGB 16 BIT, .JPEG");
-				ImGui::Text("   Lower case names.");
-				ImGui::Text("");
-				ImGui::Text("2, Place the .jpeg into the");
-				ImGui::Text("   Portraits folder.");
-            	ImGui::Text("");
-            	ImGui::Text("3, Image name must not contain:");
-            	ImGui::Text("   Numbers in file name.");
-				ImGui::Text("   Specail charecters.");
-				ImGui::Text("   or spaces.");
-				ImGui::Text("");
-				ImGui::Text("   e.g 'mynameforfile.jpg'");
-				ImGui::Text("");
-				ImGui::Text("   Will import correctly.");
-				ImGui::End();
-				}
+			
 			ImGui::Separator();
 			ImGui::Text("");
 			ImGui::Text("");
@@ -655,7 +967,7 @@ int main(int, char**)
 			ImGui::Text("");
 			ImGui::Text("New players its suggested you choose 'None'.");
 			ImGui::Text("");
-			ImGui::Text("Current effect: "); //:| Look into me. Those "if`s" :P build a look up table asap.
+			ImGui::Text("Current effect: "); //:| Look into me. Those "if`s" :P build a look up table asap. or something better.
 			int Special_flag = 0;
 			if (Class_s == 1 & abnormalities == 1){ImGui::SameLine(125);ImGui::TextColored(ImVec4(1.0f,0.0f,0.0f,1.0f), "Vampirism");Special_flag = 1;};
 			if (Class_s == 3 & abnormalities == 5){ImGui::SameLine(125);ImGui::TextColored(ImVec4(1.0f,0.0f,0.0f,1.0f), "Possessed");Special_flag = 2;;};
@@ -720,23 +1032,25 @@ int main(int, char**)
             ImGui::Text("");
             ImGui::Text("You need to roll stats, (15) + 6. Try to roll above ten in all stats.");
             ImGui::Text(" ");
+            static ImVec2 size(50, 50);
             static int Reroll_me;
             ImGui::PushID(Reroll_me);                 // buttons with styles need IDs 
             ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      // Intresting feature play with me! :)
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
-            if (ImGui::Button("Reroll Stats"))   // add a dice sound effect to me.
+            //ImGui::ImageButton((void *)d20, ImVec2(50, 50), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); // Shares the same style setting as button in text.... 
+			//if (ImGui::IsItemActive())
+            
+			if (ImGui::Button("Reroll Stats"))   // add a dice sound effect to me.
                 {
                 	
                 	srand(static_cast<unsigned int>(time(0)));
 					int randomNumber = rand();
 																
-	             	Essence = 0;								// look into random number genarators
-                	Dexterity = 0;								// Linear congruential generator (LCG):
-					Health = 0;									// I(k) = ( a * I(k-1) + c ) % m,
-					Health = 0;									// Minimal standard RNG (Park and Miller 1988)
+	             	Essence = 0;								
+                	Dexterity = 0;							// I(k) = ( a * I(k-1) + c ) % m,// Minimal standard RNG (Park and Miller 1988)
 					Health = 0;									 
-                	Fatigue = 0;								// Simple solution. going to need something better though.
+                	Fatigue = 0;								
                 	Essence = (randomNumber % 15) + 6;
                 	randomNumber = randomNumber - 1;
             		Dexterity = (randomNumber % 15) + 6;
@@ -744,13 +1058,13 @@ int main(int, char**)
             		Health = (randomNumber % 15) + 6;
             		randomNumber = randomNumber - 1;
             		Fatigue = (randomNumber % 15) + 6;
-            		
+            		 
+            
             		
 			}
 			ImGui::PopStyleColor(3);
             ImGui::PopID();
-			if (Essence <= 10 & Health <= 10 ){ImGui::SameLine(130);ImGui::TextColored(ImVec4(1.0f,1.0f,0.0f,1.0f), "- Roll me!");}
-            if (Essence > 10 & Health > 10 ){ImGui::SameLine(130);ImGui::TextColored(ImVec4(0.5f,1.0f,0.0f,1.0f), "- Stats look good!");}
+			if (Essence <= 1 & Health <= 1 & Dexterity <= 1 & Fatigue <= 1 ){ImGui::SameLine(120);ImGui::TextColored(ImVec4(1.0f,1.0f,0.0f,1.0f), "- Click to roll me.");}
             ImGui::Text(" ");
             ImGui::Text("Energy, Mana.");ImGui::SameLine(120);ImGui::Text("Dodge.");ImGui::SameLine(250);ImGui::Text("The Curse of youth.");ImGui::SameLine(400);ImGui::Text("Run rabbit run.");ImGui::SameLine(550);ImGui::Text("Bewarned it will happen!");
             ImGui::Text("Essence: %d" , Essence);ImGui::SameLine(120);ImGui::Text("Dexterity: %d", Dexterity);ImGui::SameLine(250);ImGui::Text("Health: %d", Health);ImGui::SameLine(400);ImGui::Text("Fatigue: %d", Fatigue);ImGui::SameLine(550);ImGui::Text("Insanity Resistence: %d%%", Insanity_res);
@@ -788,9 +1102,10 @@ int main(int, char**)
 			ImGui::Text("");ImGui::SameLine(300);
             if (ImGui::Button("Cancel"))
 			{
-            
-			ShowCharacterScreen = false;
-            
+            ShowCharacterScreen = false;
+            game_start_options = true;
+			
+            ImGui::CloseCurrentPopup();
         	}
         	ImGui::SameLine(380);
         	if (ImGui::Button("Accept"))
@@ -814,13 +1129,19 @@ int main(int, char**)
     							save_data << skill_blah_u;			save_data << "\n";	save_data << skill_blah_i;	save_data << "\n";
     							save_data.close();  	// maybe once orge is init, copy data over to new file make backup.
 														// create two working saves for debugging x,y,z char locations on crash.
-														// loop for autosave ? every time% elapsed?. ImGui::GetTime()    							ShowCharacterScreen = false;
+														// loop for autosave ? every time% elapsed?. ImGui::GetTime() 
+								ShowCharacterScreen = false;
+								show_ui = true;
+								show_app_console2 = true;  // need to setup main game loop, 
+								ImGui::CloseCurrentPopup();
 							}
 						}
 					}
 			ImGui::Text("");
 			ImGui::Text("");
-			ImGui::End();
+			//ImGui::End();
+			//ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
 		}
         
         // Rendering

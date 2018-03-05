@@ -1,0 +1,33 @@
+									Notes
+
+INSERTING YOUR OWN IMAGES
+									
+To add picture from file do the following.
+
+open main.cpp
+
+goto line 195	ADD "your_file_id" can be what ever you want it to be, example below.
+
+static LPDIRECT3DTEXTURE9       "your_file_id" = NULL;
+
+then goto main.cpp line 284		ADD, CHANGE smile.png to your filename
+change &avatar to &your_file_id
+
+							KEEP ME			CHANGE		CHANGE
+D3DXCreateTextureFromFile( g_pd3dDevice, "smile.png" , &avatar );
+
+
+then got to the window you wish to add an image or image button.
+
+change "avatar" to your_file_id.
+
+ImGui::Image((void *)avatar, ImVec2(85, 85), ImVec2(0,0),ImVec2(1,1),ImVec4(255,255,255,255),ImVec4(0,0,0,0));
+
+First ImVec2 is the size of the picture. "ImVec2(85, 85)"
+
+copy and paste as shown.
+
+make sure the picture is in the .exe directory. hit compile and run.			 
+			 ---------------------------------------------------------
+
+			 

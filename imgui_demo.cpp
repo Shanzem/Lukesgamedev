@@ -437,7 +437,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
                     ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ((selection_mask & (1 << i)) ? ImGuiTreeNodeFlags_Selected : 0);
                     if (i < 3)
                     {
-                        // Nodej
+                        // Node
                         bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable Node %d", i);
                         if (ImGui::IsItemClicked()) 
                             node_clicked = i;
