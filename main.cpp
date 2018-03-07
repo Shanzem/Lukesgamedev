@@ -89,7 +89,11 @@ struct ExampleAppConsole2					// LOG STARTS HERE, ISSUES :(
     	AddLog("Grab W3 Icons. ");
     	AddLog("Need em loads");
     	AddLog("SEE NOTES ON ADDING PICS");
-    	
+    	AddLog("Have a working engine from scrapyard");
+    	AddLog("but its from a 2003 model, 0.15.0");
+    	AddLog("when i have a 2018 model, 1.10.0");
+    	AddLog("needing to be built from bolts and screws.");
+    	AddLog("Scrapyard motor works though. :|,");
 	}
         
 
@@ -257,7 +261,7 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
     bool load_sheet_window = false;
-    bool show_demo_window = false;
+    bool show_demo_window = true;
     bool about = false;
     bool show_another_window = false;
     bool ShowLogOutput = false;
@@ -419,8 +423,8 @@ int main(int, char**)
 				ImGui::Text("");
 				if (ImGui::TreeNode("The Hermetic cook book"))
             	{
-            		static int i = 1;
-                    if (ImGui::TreeNode((void*)(intptr_t)i, "Chemical Details", i))
+            		static int ChemicalDetails = 1;
+                    if (ImGui::TreeNode((void*)(intptr_t)ChemicalDetails, "Chemical Details", ChemicalDetails))
                     {
                     	
                     	ImGui::Text("> The colors"); 
@@ -443,8 +447,8 @@ int main(int, char**)
 						}
                         ImGui::TreePop();
                     }
-               		static int j = 6; 
-                    if (ImGui::TreeNode((void*)(intptr_t)j, "Recipes", j))
+               		static int Recipes = 6; 
+                    if (ImGui::TreeNode((void*)(intptr_t)Recipes, "Recipes", Recipes))
                     {
                         ImGui::TextDisabled("> Recipe 1 (?)");
                         if (ImGui::IsItemHovered())
@@ -502,8 +506,8 @@ int main(int, char**)
 						}
 						ImGui::TreePop();
                     	}
-                    	static int k = 3;
-                    	if (ImGui::TreeNode((void*)(intptr_t)k, "Crafting Traps & Devices", k))
+                    	static int Crafting = 3;
+                    	if (ImGui::TreeNode((void*)(intptr_t)Crafting, "Crafting Traps & Devices", Crafting))
                     	{
                         ImGui::Text("> Spike trap");
 						if (ImGui::IsItemHovered())
@@ -625,7 +629,7 @@ int main(int, char**)
 			
 				}
 		
-		if (load_sheet_window)					// quick and easy to follow & fix, need a look up table, for class,  
+		if (load_sheet_window)					// quick and easy to follow & fix,  
 												
 			{									
 			static int load_check = 2;			// Integer load checking .. sorry ^^
