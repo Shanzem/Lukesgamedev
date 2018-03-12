@@ -59,6 +59,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 struct ExampleAppConsole2					// LOG STARTS HERE, ISSUES :(
 {
+	
     char                  InputBuf[256];
     ImVector<char*>       Items;
     bool                  ScrollToBottom;
@@ -73,31 +74,14 @@ struct ExampleAppConsole2					// LOG STARTS HERE, ISSUES :(
 		ClearLog();
         memset(InputBuf, 0, sizeof(InputBuf));
         HistoryPos = -1;
-        AddLog(" ");
-        AddLog("Issues putting logs into me :(");
-        AddLog("Google me for source help.");
-    	AddLog("Clipper needs setting up.");
-    	AddLog("Could be API Issue.");
-    	AddLog("Window works perfect though :)");
-    	AddLog("Max Char length = 45");
-    	AddLog("Lots of code rewritten..");
-    	AddLog("Check source.");
-    	AddLog("Playing with pictures");
-    	AddLog("Check about source.");
-    	AddLog("For basic UI have -");
-    	AddLog("Low level pictures.");
-    	AddLog("Grab W3 Icons. ");
-    	AddLog("Need em loads");
-    	AddLog("SEE NOTES ON ADDING PICS");
-    	AddLog("Have a working engine from scrapyard");
-    	AddLog("but its from a 2003 model, 0.15.0");
-    	AddLog("when i have a 2018 model, 1.10.0");
-    	AddLog("needing to be built from bolts and screws.");
-    	AddLog("Scrapyard motor works though. :|,");
+        AddLog("OIS Static built");
+        AddLog("Boost built");
+        AddLog("Ogre build issues :|");
+        
+        
 	}
         
-
-    
+	
     ~ExampleAppConsole2()
     {
         ClearLog();
@@ -145,6 +129,8 @@ struct ExampleAppConsole2					// LOG STARTS HERE, ISSUES :(
         if (ImGui::Button("Clear")) { ClearLog(); } ImGui::SameLine(); 
         bool copy_to_clipboard = ImGui::Button("Copy"); ImGui::SameLine();
         if (ImGui::Button("Scroll to bottom")) ScrollToBottom = true;
+        ImGui::SameLine();
+        ImGui::Text("(%.1f FPS)", ImGui::GetIO().Framerate);
         ImGui::Separator();
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
         if (ImGui::BeginPopupContextWindow())
@@ -200,11 +186,13 @@ static LPDIRECT3DTEXTURE9       avatar = NULL;		// image idents here. here =)
 static LPDIRECT3DTEXTURE9       d20 = NULL;
 
 
-static void ShowExampleAppConsole2(bool* p_open)	// DRAW LOG
+void ShowExampleAppConsole2(bool* p_open)	// DRAW LOG
 {
     static ExampleAppConsole2 console2;
     console2.Draw("Example: Console2", p_open);
+    
 }
+
 
 int main(int, char**)
 {
@@ -275,14 +263,15 @@ int main(int, char**)
     bool char_port = false;
     bool exit = false;
     bool load_image_about = false;
-	static bool show_app_console2 = false;
+	bool show_app_console2 = false;
 	bool hermetic_cookbook = false;
-	
+	bool player_notepad = false;
 	bool game_start_options = true;
 	bool import_image_from_file = false;
- 
-	
-	
+ 	bool GenericTradeWindow = false;
+	bool StaffsAndWands = false;
+	bool RobesAndClothes = false;
+	bool Sleep = false;
 	
     ImVec4 clear_color = ImVec4(0.073f, 0.115f, 0.177f, 1.000f); //RGBA colour for screen. place holder picture me asap. i still need music.
 	D3DXCreateTextureFromFile( g_pd3dDevice, "d20.png" , &d20 );			// image file grabs here :)
@@ -307,7 +296,6 @@ int main(int, char**)
             continue;
         }									   ///////////////////////////////////////////
         ImGui_ImplDX9_NewFrame();             // IT ALL STARTS HERE
-		
 		
 		
 		
@@ -336,13 +324,13 @@ int main(int, char**)
     	}
          if (ImGui::BeginMenu("File"))
         {
-            ImGui::MenuItem("New Game", "CTRL+N", &ShowCharacterScreen);
-            ImGui::MenuItem("Save Game", "CTRL+S"); 
+            ImGui::MenuItem("New Game", NULL, &ShowCharacterScreen);
+            ImGui::MenuItem("Save Game", NULL); 
             ImGui::Separator();
-            ImGui::MenuItem("Load Sheet", "CTRL+W", &load_sheet_window);
-            ImGui::MenuItem("Load Game", "CTRL+L");
-            ImGui::MenuItem("Options", "CTRL+O");
-            ImGui::MenuItem("Exit","CTRL+E",  &exit);
+            ImGui::MenuItem("Load Sheet", NULL, &load_sheet_window);
+            ImGui::MenuItem("Load Game", NULL);
+            ImGui::MenuItem("Options", NULL);
+            ImGui::MenuItem("Exit", NULL,  &exit);
             if (exit)
             {
             	goto Shutdown;	
@@ -351,9 +339,9 @@ int main(int, char**)
 		}
 		if (ImGui::BeginMenu("Help"))
 				{
-					ImGui::MenuItem("About", "CTRL+A", &about);
-					ImGui::MenuItem("Import image", "CTRL+b", &import_image_from_file);
-					ImGui::MenuItem("About import image", "CTRL+c", &load_image_about);
+					ImGui::MenuItem("About", NULL, &about);
+					ImGui::MenuItem("Import image", NULL, &import_image_from_file);
+					ImGui::MenuItem("About import image", NULL, &load_image_about);
 					
 					ImGui::EndMenu();
 				}
@@ -369,8 +357,10 @@ int main(int, char**)
 			ImGui::Begin("About", &about);
             ImGui::Text("");
             ImGui::Text("Dear ImGui, %s", ImGui::GetVersion());
-            ImGui::Text("");
-			ImGui::Text("By Luke Hays");
+            ImGui::Text("By Omar Cornut and all dear imgui contributors.");
+        	ImGui::Text("Dear ImGui is licensed under the MIT License, see LICENSE for more information.");
+        	ImGui::Text("");
+			ImGui::Text("Game by Luke Hays");
             ImGui::Text("");
 			ImGui::Text("Written in C++, using Dev ++ with the TDM Mingw64 compiler.");
             ImGui::Text("Useing IMGUI API, and OGRE 3D graphics engine.");
@@ -380,15 +370,173 @@ int main(int, char**)
             ImGui::Text("Make a refrence to the witching hour from dungeon keeper 2");
             ImGui::Text("");
             ImGui::Text("");
+            //ExampleAppConsole2::AddLog("Hello");
             //ImGui::Image();
             //ImGui::ImageButton(), 
 			//ImDrawList::AddImage()
-			//ExampleAppConsole2::AddLog("hello"); // still having issues, google me.
-            ImGui::End();
+			ImGui::End();
         }
+        if(RobesAndClothes)
+        {
+        	ImGui::SetNextWindowPos(ImVec2(255, 131));    
+			ImGui::SetNextWindowSize(ImVec2(500,500));
+			ImGui::Begin("Robes And Clothes", &RobesAndClothes, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+			ImGui::Text("Robes and Clothes, Hover over item for details");
+			ImGui::Separator();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));  
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));  
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::End(); 
+			
+		}
+        if(StaffsAndWands)
+        {
+        	ImGui::SetNextWindowPos(ImVec2(255, 131));    
+			ImGui::SetNextWindowSize(ImVec2(500,500));
+			ImGui::Begin("Staffs and Wands ", &StaffsAndWands, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+			ImGui::Text("Staffs and Wands, Hover over item for details");
+			ImGui::Separator();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));  
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));  
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::End(); 
+			
+		}
+		if(Sleep)
+        {
+        	ImGui::SetNextWindowPos(ImVec2(255, 131));    
+			ImGui::SetNextWindowSize(ImVec2(500,500));
+			ImGui::Begin("Sleep and Rest services", &Sleep, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+			ImGui::Text("Sleep services, Hover over item for details");
+			ImGui::Separator();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));  
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255));  
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)d20, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::SameLine();
+			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
+			ImGui::End(); 
+			
+		}
         
-        
-        
+        if (GenericTradeWindow)		// As the name implies.
+        	{
+        		
+        	ImGui::SetNextWindowPos(ImVec2(0, 131));    
+			ImGui::SetNextWindowSize(ImVec2(255,500)); 
+			ImGui::Begin("Trade: ", &GenericTradeWindow, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+        	ImGui::Text("Click for details");
+			ImGui::Separator();
+			ImGui::Text("");
+			if (ImGui::TreeNode("Shop"))
+			{
+				static int ShopItem1 = 1;
+                if (ImGui::TreeNode((void*)(intptr_t)ShopItem1, "Staffs and Wands", ShopItem1))
+                {
+                		ImGui::Text("> Staffs"); 
+						if (ImGui::IsItemClicked())
+            			{
+            				Sleep = false;
+            				RobesAndClothes = false;
+            				StaffsAndWands = true;
+                		}
+                ImGui::TreePop();
+				}
+                
+                static int ShopItem2 = 2;
+                if (ImGui::TreeNode((void*)(intptr_t)ShopItem2, "Robes and Clothes", ShopItem2))
+                {
+                		ImGui::Text("> Clothes"); 
+						if (ImGui::IsItemClicked())
+            			{
+            				Sleep = false;
+            				StaffsAndWands = false;
+            				RobesAndClothes = true;
+                		}
+                ImGui::TreePop();
+				}
+                ImGui::TreePop();
+                
+			}
+			
+			
+			if (ImGui::TreeNode("Inn"))
+			{
+				static int Shopinn = 1;
+                if (ImGui::TreeNode((void*)(intptr_t)Shopinn, "Beds", Shopinn))
+                {
+                	ImGui::Text("> Sleep & Rest");
+                	if (ImGui::IsItemClicked())
+            			{
+            				StaffsAndWands = false;
+            				RobesAndClothes = false;
+            				Sleep = true;
+                		}
+                ImGui::TreePop();
+				}
+				
+				ImGui::TreePop();
+			}
+			ImGui::Text("The NPC pawn that opens this");
+			ImGui::Text("Must call all shop windows false.");
+			ImGui::Text("Once finished.");
+			if(ImGui::Button("Close"))
+				{
+				StaffsAndWands = false;
+            	RobesAndClothes = false;
+            	Sleep = false;
+                }
+			
+			ImGui::End();
+			}
 		if (show_app)
 				{
 			
@@ -398,19 +546,22 @@ int main(int, char**)
             ImGui::Text("");
             ImGui::Text("Window skipper..");
             ImGui::Text("");
+            ImGui::Text("");
+            ImGui::Checkbox("Show ImGui Demo", &show_demo_window);
+            if (show_demo_window)
+        	{
+            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+            ImGui::ShowDemoWindow(&show_demo_window);
+        	}
+       
             ImGui::Checkbox("Character sheet", &ShowCharacterScreen);      // Edit bools storing our windows open/close state
             ImGui::Checkbox("Load character sheet", &load_sheet_window);
             ImGui::Checkbox("Alchemy set", &hermetic_cookbook);
 			ImGui::Checkbox("Show UI", &show_ui);
+			ImGui::Checkbox("Show Trade window", &GenericTradeWindow);
             ImGui::Text("");
-            
             ImGui::Text("");
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        	
-			
-         							
-			//ImGui::ShowMetricsWindow();
-			ImGui::End();
+            ImGui::End();
 				}
 
 				if (hermetic_cookbook)    // no doubt i am going to have to put this in the main game loop.
@@ -560,7 +711,6 @@ int main(int, char**)
             if(hermetic_cookbook)
 			{
 			ImGui::SetNextWindowPos(ImVec2(500, 131));    
-			//ImGui::SetNextWindowSize(ImVec2(500,400)); 
 			ImGui::Begin("Alchemy kit", &hermetic_cookbook, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
             ImGui::Text("");
             static int damage;
@@ -826,13 +976,20 @@ int main(int, char**)
 				ImGui::Text("   Will import correctly.");
 				ImGui::End();
 				}
-        // 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-        if (show_demo_window)
+        if (player_notepad)						// to add to the save file folder. seperate file.
         {
-            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-            ImGui::ShowDemoWindow(&show_demo_window);
-        }
-        
+        	ImGui::SetNextWindowPos(ImVec2(400, 200));
+			ImGui::SetNextWindowSize(ImVec2(300,245));
+			ImGui::Begin("Notepad:", &player_notepad, ImGuiWindowFlags_NoResize);
+        	static char notepad[1024*16] =
+			"/********** My Notes **********\\ \n"
+			" \n"
+			" \n"
+			" \n"
+			"Notes are automatically saved! ";
+			ImGui::InputTextMultiline("##source", notepad, IM_ARRAYSIZE(notepad), ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16), ImGuiInputTextFlags_AllowTabInput );
+            ImGui::End();
+		}
 		if (show_ui)
 				 {
 				if (show_ui)
@@ -850,10 +1007,57 @@ int main(int, char**)
 					if(show_ui)
 					{
 					
-        	ImGui::SetNextWindowPos(ImVec2(977, 200));    
-			ImGui::SetNextWindowSize(ImVec2(285,560));
+        	ImGui::SetNextWindowPos(ImVec2(977, 198));    
+			ImGui::SetNextWindowSize(ImVec2(285,562));
 			ImGui::Begin("map and other ui elements.", &show_ui, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-            ImGui::Text("");
+            ImGui::PushID("loadout");
+            if (ImGui::BeginMenu("Books / Quests / Loadout settings"))
+            {
+               
+			    if (ImGui::MenuItem("Open Notes", NULL, &player_notepad)) {}
+			    if (ImGui::MenuItem("Open Books", NULL)) {}
+			    if (ImGui::MenuItem("Open Quests", NULL)) {}
+			    //if (ImGui::MenuItem("Open Book", NULL)) {}
+			    if (ImGui::BeginMenu("Open Attire"))
+			    {
+			        ImGui::MenuItem("New");
+			        ImGui::MenuItem("Change");
+			        ImGui::MenuItem("Save");
+			        if (ImGui::BeginMenu("Preset"))
+			        {
+			            ImGui::MenuItem("Suit");
+			            ImGui::MenuItem("Sailor");
+			            ImGui::EndMenu();
+			        }
+			        ImGui::EndMenu();
+			    }
+			    
+			    if (ImGui::MenuItem("Save equipped as ONE")) {}
+			    if (ImGui::MenuItem("Save equipped as TWO")) {}
+			    
+			    ImGui::Separator();
+			    if (ImGui::BeginMenu("Options"))
+			    {
+			        static bool enabled = true;
+			        ImGui::MenuItem("Enabled", "", &enabled);
+			        ImGui::BeginChild("child", ImVec2(0, 60), true);
+			        for (int i = 0; i < 10; i++)
+			            ImGui::Text("Scrolling Text %d", i);
+			        ImGui::EndChild();
+			        static float f = 0.5f;
+			        static int n = 0;
+			        static bool b = true;
+			        ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
+			        ImGui::InputFloat("Input", &f, 0.1f);
+			        ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
+			        ImGui::Checkbox("Check", &b);
+			        ImGui::EndMenu();
+			    }
+			    if (ImGui::MenuItem("Checked", NULL, true)) {}
+			    ImGui::EndMenu();    
+			            }
+			ImGui::PopID();
+			ImGui::Text("");
             ImGui::Text("Charactar loadout.");
             ImGui::Text("on hand, worn, books.");
             ImGui::Text("");
@@ -867,6 +1071,7 @@ int main(int, char**)
             ImGui::Image((void *)avatar, ImVec2(85, 85), ImVec2(0,0),ImVec2(1,1),ImVec4(255,255,255,255),ImVec4(0,0,0,0));
 			ImGui::End();
 				}
+			if (show_ui)	
 				{
             ImGui::SetNextWindowPos(ImVec2(0, 125));
 			ImGui::SetNextWindowSize(ImVec2(105,50)); 
@@ -905,7 +1110,10 @@ int main(int, char**)
 			ImGui::ImageButton((void *)avatar, ImVec2(35, 35), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); 
 			ImGui::Text("Going to add a switch and case for each class / Special flag to acquire required icons.");
 			}
-			if(Tools == 1){ImGui::Text("Spells/combat");}
+			if(Tools == 1){ImGui::Text("Spells/combat");
+			
+			
+			}
 			if(Tools == 2){ImGui::Text("Inventory");}
 			
 			
@@ -917,9 +1125,6 @@ int main(int, char**)
 		{		ImGui::OpenPopup("dummymechar");
             if (ImGui::BeginPopupModal("dummymechar", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
            
-			//ImGui::SetNextWindowSize(ImVec2(750,700));
-			//ImGui::SetNextWindowPos(ImVec2(280, 20));
-			//ImGui::Begin("Roll me up!", &ShowCharacterScreen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 			ImGui::Text("");
 			ImGui::SameLine(305);
 			if (show_char_port)
@@ -1010,20 +1215,15 @@ int main(int, char**)
             ImGui::RadioButton("Nihilistic - AI", &Difficulty, 0);ImGui::SameLine(200);ImGui::Text("- Why even bother?");ImGui::SameLine(400);ImGui::Text("- Easy");
             ImGui::Text("");
             ImGui::Separator();
-            int Essence;
-            if (Essence > 30){ Essence = 0;}
-            int Dexterity;
-            if (Dexterity > 30){ Dexterity = 0;}
-            int Health;
-            if (Health > 30){ Health = 0;}
-            int Fatigue;
-            if (Fatigue > 30){ Fatigue = 0;}
-            int Insanity_res;
-            if (Insanity_res > 50){ Insanity_res = 0;}
+            static int Essence = 0;
+        	static int Dexterity = 0;
+            static int Health = 0;
+            static int Fatigue = 0;
+            static int Insanity_res;
             if (abnormalities >= 1){Insanity_res = 10;
 			if (Special_flag >= 1 & abnormalities >= 1){Insanity_res = 30;}}else {Insanity_res = 0;}
 			static int skill_points = 15;
-			int skill_points_spent = 0;
+			static int skill_points_spent = 0;
             static int skill_blah = 0;
             static int skill_blah_q = 0;
             static int skill_blah_w = 0;
@@ -1042,8 +1242,6 @@ int main(int, char**)
             ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      // Intresting feature play with me! :)
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
-            //ImGui::ImageButton((void *)d20, ImVec2(50, 50), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)); // Shares the same style setting as button in text.... 
-			//if (ImGui::IsItemActive())
             
 			if (ImGui::Button("Reroll Stats"))   // add a dice sound effect to me.
                 {
